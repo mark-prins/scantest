@@ -11,8 +11,10 @@ addEventListener('DOMContentLoaded', () => {
     const html = devices
       .map(
         (device) =>
-          `<div><b>Manufacturer:</b> ${device.manufacturer}<p><b>Product</b>:${
-            device.product || '[blank]'
+          `<div class=${device.connected ? 'connected' : 'disconnected'}><b>Manufacturer:</b> ${
+            device.manufacturer
+          }<p><b>Product</b>:${device.product || '[blank]'}${
+            device.connected ? ' (connected)' : ''
           }<br/><b>Path</b>:${device.path || '[blank]'}<br/><b>VendorId</b>:${
             device.vendorId
           } <b>ProductId</b>:${device.productId}</p></div>`
@@ -22,6 +24,9 @@ addEventListener('DOMContentLoaded', () => {
   });
 
   window.electronAPI.onBarcodeScan((_event, result) =>
-    appendText('results', `vid: ${result.vid}, pid: ${result.pid}, data: ${result.data}`)
+    appendText(
+      'results',
+      `vid: ${result.vid}, pid: ${result.pid}, data: ${result.data}, value: ${result.numeric}\r\n`
+    )
   );
 });

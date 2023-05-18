@@ -1,3 +1,18 @@
 body {
   font-family: sans-serif;
 }
+.display {
+  height: 300px;
+  overflow-y: scroll;
+}
+div.connected {
+  color: green;
+}
+
+div.disconnected {
+  color: red;
+}
+
+div > p {
+  margin-left: 30px;
+}

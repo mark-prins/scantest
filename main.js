@@ -3,32 +3,36 @@ const HID = require('node-hid');
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const hids = [];
 
 const loadScanners = (window) => {
   const devices = [];
-
-  HID.devices()
-    // .filter((d) => !!d.path)
-    .forEach((device) => {
-      devices.push(device);
-      try {
-        // const hid = new HID.HID(device.vendorId, device.productId);
-        const hid = new HID.HID(device.path);
+  HID.devices().forEach((device) => {
+    const current = { ...device, connected: false };
+    try {
+      // if (device.vendorId === 9969) {
+      if (device.vendorId === 1504) {
+        const hid = new HID.HID(device.vendorId, device.productId);
+        current.connected = true;
         const result = {
           pid: device.productId,
           vid: device.vendorId,
           product: device.product,
         };
-        hid.on('data', (data) =>
+        hid.on('data', (data) => {
           window.webContents.send('on-barcode-scan', {
             ...result,
             data: data.reduce((barcode, curr) => barcode + String.fromCharCode(curr), ''),
-          })
-        );
-      } catch (e) {
-        console.error(`device: ${device.vendorId}, ${device.productId}`, e);
+            numeric: data.reduce((barcode, curr) => `${barcode},${curr}`, ''),
+          });
+        });
+        hids.push(hid);
       }
-    });
+    } catch (e) {
+      console.error(`device: ${device.product} (${device.productId})`, e);
+    }
+    devices.push(current);
+  });
   window.webContents.send('show-devices', devices);
 };
 
@@ -65,5 +69,12 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  console.info('closing devices...');
+  hids.forEach((device) => {
+    try {
+      device.close();
+    } catch {}
+  });
+  console.info('done!');
   app.quit();
 });
