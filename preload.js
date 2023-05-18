@@ -1,10 +1,13 @@
-window.addEventListener('DOMContentLoaded', () => {
-  const replaceText = (selector, text) => {
-    const element = document.getElementById(selector);
-    if (element) element.innerText = text;
-  };
+const { contextBridge, ipcRenderer } = require('electron');
 
-  for (const dependency of ['chrome', 'node', 'electron']) {
-    replaceText(`${dependency}-version`, process.versions[dependency]);
-  }
-});
+const electronNativeAPI = {
+  onBarcodeScan: (callback) => {
+    ipcRenderer.on('on-barcode-scan', callback);
+  },
+  showDevices: (callback) => {
+    ipcRenderer.on('show-devices', callback);
+    ipcRenderer.send('get-devices');
+  },
+};
+
+contextBridge.exposeInMainWorld('electronAPI', electronNativeAPI);
