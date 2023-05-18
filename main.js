@@ -11,7 +11,7 @@ const loadScanners = (window) => {
     const current = { ...device, connected: false };
     try {
       // if (device.vendorId === 9969) {
-      if (device.vendorId === 1504) {
+      if (device.vendorId !== 0) {
         const hid = new HID.HID(device.vendorId, device.productId);
         current.connected = true;
         const result = {
@@ -73,8 +73,15 @@ app.on('window-all-closed', () => {
   hids.forEach((device) => {
     try {
       device.close();
-    } catch {}
+    } catch { }
   });
   console.info('done!');
   app.quit();
+});
+
+process.on('uncaughtException', error => {
+  console.warn('error', error);
+
+  if (error.message === 'could not read from HID device') return;
+  dialog.showErrorBox('Error', error.message);
 });
